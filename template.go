@@ -5,10 +5,13 @@
 package static
 
 import (
+	"errors"
 	"io"
 	"path/filepath"
 	"text/template"
 )
+
+var templateNoInit = errors.New("The template is not init.")
 
 // Can be breaken
 type Template struct {
@@ -21,6 +24,9 @@ func NewTemplate() *Template {
 }
 
 func (t *Template) Execute(w io.Writer, data interface{}) error {
+	if t == nil || t.T == nil {
+		return templateNoInit
+	}
 	if Dev && t.get != nil {
 		t.parse(t.get())
 	}
@@ -29,13 +35,17 @@ func (t *Template) Execute(w io.Writer, data interface{}) error {
 
 func (t *Template) Bytes(in []byte) *Template {
 	t.get = nil
-	t.parse(in)
+	if Dev {
+		t.parse(in)
+	} else {
+		t.parse(HtmlMinify(in))
+	}
 	return t
 }
 
 func (t *Template) Func(f func() []byte) *Template {
 	t.get = f
-	t.parse(f())
+	t.parse(HtmlMinify(f()))
 	return t
 }
 
@@ -50,8 +60,9 @@ func (t *Template) FileJoinPath(path ...string) *Template {
 
 func (t *Template) parse(in []byte) {
 	var err error
-	t.T, err = template.New("").Parse(string(t.get()))
+	t.T, err = template.New("").Parse(string(in))
 	if err != nil {
+		t.T = nil
 		Log.Printf("template parse error: %v", err)
 	}
 }

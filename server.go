@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	Log = log.New(os.Stderr, "[STATIC ERROR]", log.LstdFlags)
+	Log = log.New(os.Stderr, "[STATIC ERROR] ", log.LstdFlags)
 	// Dev disable the minifing and read the file at for each request.
 	Dev bool = false
 )
