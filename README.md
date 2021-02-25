@@ -1,4 +1,4 @@
-# static.v2
+# static.v3
 
 [![PkgGoDev](https://pkg.go.dev/badge/HuguesGuilleus/static.v3)](https://pkg.go.dev/HuguesGuilleus/static.v3)
 
@@ -7,7 +7,7 @@ Create easily a http Handler for static file.
 ## Installation
 
 ```bash
-go get -u github.com/HuguesGuilleus/static.v3
+go get github.com/HuguesGuilleus/static.v3
 ```
 
 ## Example
