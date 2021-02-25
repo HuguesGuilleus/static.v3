@@ -7,6 +7,7 @@ package static
 import (
 	"errors"
 	"io"
+	"os"
 	"path/filepath"
 	"text/template"
 )
@@ -50,7 +51,7 @@ func (t *Template) Func(f func() []byte) *Template {
 }
 
 func (t *Template) File(f string) *Template {
-	t.get = func() []byte { return readFileOnce(f, HtmlMinify) }
+	t.get = func() []byte { return readFileOnce(os.DirFS(f), HtmlMinify) }
 	t.parse(t.get())
 	return t
 }

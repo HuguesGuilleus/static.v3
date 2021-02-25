@@ -6,7 +6,7 @@
 package static
 
 import (
-	"io/ioutil"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -43,12 +43,16 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write(s.Body)
 }
 
+// Replace s.Body by minifed (not in dev mode) body.
 func (s *Server) Bytes(body []byte) *Server {
 	s.Body = s.Minify.min(body)
 	s.get = nil
 	return s
 }
 
+// Call f once to get s.Body.
+//
+// In developpement mode, call f for each request.
 func (s *Server) Func(f func() []byte) *Server {
 	s.Body = s.Minify.min(f())
 	s.get = f
@@ -63,7 +67,7 @@ func (s *Server) Func(f func() []byte) *Server {
 // The served content are minify (expect if Dev is enable) with min. If min
 // is nil, the content are not minify.
 func (s *Server) File(path string) *Server {
-	s.get = func() []byte { return readFileOnce(path, s.Minify) }
+	s.get = func() []byte { return readFileOnce(os.DirFS(path), s.Minify) }
 	go func() {
 		b := s.get()
 		if len(b) > 0 {
@@ -80,16 +84,16 @@ func (s *Server) FileJoinPath(path ...string) *Server {
 
 // readFileOnce read the content of the file or directory, minify each, concat
 // all part and return it.
-func readFileOnce(f string, m Minifier) []byte {
+func readFileOnce(s fs.FS, m Minifier) []byte {
 	data := make([]byte, 0)
-	filepath.Walk(f, func(p string, info os.FileInfo, err error) error {
+	fs.WalkDir(s, ".", func(p string, info fs.DirEntry, err error) error {
 		if err != nil {
 			Log.Printf("get info error %q: %v", p, err)
 			return nil
 		} else if info.IsDir() || strings.HasPrefix(info.Name(), ".") {
 			return nil
 		}
-		d, err := ioutil.ReadFile(p)
+		d, err := fs.ReadFile(s, p)
 		if err != nil {
 			Log.Printf("read error %q: %v", p, err)
 			return nil
