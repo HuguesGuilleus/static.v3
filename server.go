@@ -67,7 +67,11 @@ func (s *Server) Func(f func() []byte) *Server {
 // The served content are minify (expect if Dev is enable) with min. If min
 // is nil, the content are not minify.
 func (s *Server) File(path string) *Server {
-	s.get = func() []byte { return readFileOnce(os.DirFS(path), s.Minify) }
+	return s.FS(os.DirFS(path))
+}
+
+func (s *Server) FS(fs fs.FS) *Server {
+	s.get = func() []byte { return readFileOnce(fs, s.Minify) }
 	go func() {
 		b := s.get()
 		if len(b) > 0 {
